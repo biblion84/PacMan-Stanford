@@ -330,35 +330,26 @@ def betterEvaluationFunction(currGameState):
   walls = currGameState.getWalls()
   capsules = currGameState.getCapsules()
   ghosts = currGameState.getGhostStates()
-  capsulesGrid = currGameState.getFood()
 
-  for x in range(0,capsulesGrid.width -1):
-    for y in range(0, capsulesGrid.height - 1):
-      capsulesGrid[x][y] = False
-
-  for capsule in capsules:
-    capsulesGrid[capsule[0]][capsule[1]] = True
+  scoreGhostAfraid = 0
+  # for ghost in ghosts:
+  #   if ghost.scaredTimer > 2:
+  #     scoreGhostAfraid += 50
 
   pacmanConfDir = pacman.configuration.direction
   badposition = BadAction(HistoActions)
 
   scoreBadPos = 0
   if pacmanConfDir == badposition:
-      scoreBadPos = -10
-  # for capsule in capsules:
-  #   foods[capsule[0]][capsule[1]] = True
+      scoreBadPos = -5
 
-  # manhattanFood = nearestFood(foods, position)
-  # nearestFoodToPacman = manhattanFood
   nearestFoodToPacman = nearestFoodGansterDjikstra(position, walls, foods)
   if nearestFoodToPacman ==  200:
     nearestFoodToPacman = nearestFood(foods, position)
 
   if (foodRemaining < 1) :
       nearestFoodToPacman = nearestFood(foods, position)
-  # foodScore = 1000
-  # if (foodRemaining > 0):
-  #   foodScore = float(1/foodRemaining)
+
   nGhost = nearestGhost(ghosts, position)
   fleeingScore = 0
   if util.manhattanDistance(nGhost.getPosition(), position) <= 1:
@@ -367,20 +358,9 @@ def betterEvaluationFunction(currGameState):
     else :
       fleeingScore = -10
 
-  scaredGhost = 0
-  # for ghost in ghosts:
-  #   if ghost.scaredTimer > 3:
-  #     distanceFromGhost = util.manhattanDistance(position, ghost.getPosition())
-  #     scoreFantome += 1/distanceFromGhost * -2
-
-
   capsulesNumber = len(capsules)
-  # capsuleNear = 0
-  # for capsule in capsules:
-  #     capsuleNear = max(capsuleNear, 1/util.manhattanDistance(position, [capsule[0], capsule[1]]))
 
-  # if (capsulesNumber > 0 )
-  return  currGameState.getScore() + (float(1)/(nearestFoodToPacman) * 5) + fleeingScore + capsulesNumber * -20 + scoreBadPos
+  return  currGameState.getScore() + (float(1)/(nearestFoodToPacman) * 5) + fleeingScore + capsulesNumber * -20 + scoreBadPos - scoreGhostAfraid
 
 def nearestGhost(ghosts, position):
   distance = float('inf')
