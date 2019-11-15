@@ -313,7 +313,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       if value > valueOfAction: # Here we can see that value == value of action a lot
         bestAction = action # I need to change the evaluation function to change that
         valueOfAction = value
-
+    HistoActions.append(bestAction)
     return  bestAction
 
 def betterEvaluationFunction(currGameState):
@@ -330,26 +330,57 @@ def betterEvaluationFunction(currGameState):
   walls = currGameState.getWalls()
   capsules = currGameState.getCapsules()
   ghosts = currGameState.getGhostStates()
+  capsulesGrid = currGameState.getFood()
+
+  for x in range(0,capsulesGrid.width -1):
+    for y in range(0, capsulesGrid.height - 1):
+      capsulesGrid[x][y] = False
+
+  for capsule in capsules:
+    capsulesGrid[capsule[0]][capsule[1]] = True
+
+  pacmanConfDir = pacman.configuration.direction
+  badposition = BadAction(HistoActions)
+
+  scoreBadPos = 0
+  if pacmanConfDir == badposition:
+      scoreBadPos = -10
+  # for capsule in capsules:
+  #   foods[capsule[0]][capsule[1]] = True
 
   # manhattanFood = nearestFood(foods, position)
   # nearestFoodToPacman = manhattanFood
   nearestFoodToPacman = nearestFoodGansterDjikstra(position, walls, foods)
+  if nearestFoodToPacman ==  200:
+    nearestFoodToPacman = nearestFood(foods, position)
+
   if (foodRemaining < 1) :
       nearestFoodToPacman = nearestFood(foods, position)
   # foodScore = 1000
   # if (foodRemaining > 0):
   #   foodScore = float(1/foodRemaining)
   nGhost = nearestGhost(ghosts, position)
-  scoreFuite = 0
+  fleeingScore = 0
   if util.manhattanDistance(nGhost.getPosition(), position) <= 1:
     if (nGhost.scaredTimer > 2):
-      scoreFuite += 100
+      fleeingScore += 100
     else :
-      scoreFuite = -10
+      fleeingScore = -10
+
+  scaredGhost = 0
+  # for ghost in ghosts:
+  #   if ghost.scaredTimer > 3:
+  #     distanceFromGhost = util.manhattanDistance(position, ghost.getPosition())
+  #     scoreFantome += 1/distanceFromGhost * -2
 
 
+  capsulesNumber = len(capsules)
+  # capsuleNear = 0
+  # for capsule in capsules:
+  #     capsuleNear = max(capsuleNear, 1/util.manhattanDistance(position, [capsule[0], capsule[1]]))
 
-  return  currGameState.getScore() + (float(1)/(nearestFoodToPacman) * 5) + scoreFuite
+  # if (capsulesNumber > 0 )
+  return  currGameState.getScore() + (float(1)/(nearestFoodToPacman) * 5) + fleeingScore + capsulesNumber * -20 + scoreBadPos
 
 def nearestGhost(ghosts, position):
   distance = float('inf')
@@ -371,7 +402,7 @@ def nearestFoodGansterDjikstra(pacmanPosition, walls, foods):
     positionTested = []
     while not found and not positionQueue.isEmpty():
         positionToTest = positionQueue.pop()
-        if foods[positionToTest[0]][positionToTest[1]]:
+        if foods[positionToTest[0]][positionToTest[1]] or depth > 200:
             found = True
         else :
             possiblePositions = Actions.getLegalNeighbors(positionToTest, walls)
@@ -401,6 +432,27 @@ def nearestFood(foods, position):
   #   distance = min(distance, util.manhattanDistance(food.getPosition(), position))
   return distance
 
+def BadAction(LastAction):
+    taile = len(LastAction)
+    taile -= 1
+    modif = False
+    lastposition = 'Stop'
+    if taile >= 0:
+      lastposition = LastAction[taile]
+    if lastposition == 'West' and modif == False:
+      lastposition = 'East'
+      modif = True
+    if lastposition == 'East' and modif == False:
+      lastposition = 'West'
+      modif = True
+    if lastposition == 'North' and modif == False:
+      lastposition = 'South'
+      modif = True
+    if lastposition == 'South' and modif == False:
+      lastposition = 'North'
+      modif = True
+    return lastposition
+HistoActions = []
 
 # Abbreviation
 better = betterEvaluationFunction
