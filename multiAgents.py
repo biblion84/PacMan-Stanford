@@ -13,7 +13,7 @@ from collections import defaultdict
 import math
 from game import Agent
 from MonteCarlo import MCTS, Node
-import panda as pd
+import pandas as pd
 
 class ReflexAgent(Agent):
   """
@@ -146,6 +146,9 @@ class MultiAgentSearchAgent(Agent):
     self.index = 0 # Pacman is always agent index 0
     self.evaluationFunction = util.lookup(evalFn, globals())
     self.depth = int(depth)
+    self.indexDataframe = 0
+    self.dataFrame = pd.DataFrame( columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"])
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
   """
@@ -266,6 +269,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     return  bestAction
 
+
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
   """
     Your expectimax agent (question 4)
@@ -323,7 +328,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
     HistoActions.append(bestAction)
     AlreadyVisited.append(nextGameState.getPacmanPosition())
-
+    self.dataFrame.loc[self.indexDataframe] = extractFeature(currGameState, bestAction)
+    self.indexDataframe = self.indexDataframe + 1
+    
+    if (nextGameState.isWin()):
+      if (nextGameState.getScore() > 2100):
+        with open('dataGameWonMoreThan2000Map.csv', 'a') as f:
+          self.dataFrame.to_csv(f, header=False)
+          
     return  bestAction
 
 def AlreadyVisitedScore(position):
@@ -581,6 +593,7 @@ def extractFeature(gameState, actionChoosed):
   ghosts = gameState.getGhostStates()
   walls = gameState.getWalls()
   foods = gameState.getFood()
+  foodNumber = gameState.getNumFood()
   capsules = gameState.getCapsules()
   ghostsGrid = foods.copy()
   capsulesGrid = foods.copy()
@@ -622,9 +635,10 @@ def extractFeature(gameState, actionChoosed):
   emptyLeft = 1 if  (ghostLeft + wallLeft + foodLeft) >= 0 else 0
   emptyRight = 1 if  (ghostRight + wallRight + foodRight) >= 0 else 0
   #nearestGhost(ghosts, position, walls, ghostsGrid):
-  nearestFood = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if (len(foods)) > 0  else 0
-  nearestGhost = 1 / nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
-  nearestCapsule = 1 / nearestGhost(capsules, pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
+  nearestFood = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0  else 0
+  #nearestGhost = 1 / nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
+  nearestGhostDistance = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
+  nearestCapsule = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
   nextAction = actionChoosed
   
   # nextActionUp = "North" == nextAction
@@ -641,36 +655,39 @@ def extractFeature(gameState, actionChoosed):
   
   pacmanPositionX = 1 / pacmanPosition[0]
   pacmanPositionY = 1 / pacmanPosition[1]
+
+
+
   
-   dataFrameCurrentState = pd.DataFrame({ "ghostUp" : ghostUp ,
-                            "ghostDown" : ghostDown ,
-                            "ghostLeft" : ghostLeft ,
-                            "ghostRight" : ghostRight ,
-                            "wallUp" : wallUp ,
-                            "wallDown" : wallDown ,
-                            "wallLeft" : wallLeft ,
-                            "wallRight" : wallRight ,
-                            "foodUp" : foodUp ,
-                            "foodDown" : foodDown ,
-                            "foodLeft" : foodLeft ,
-                            "foodRight" : foodRight ,
-                            "emptyUp" : emptyUp ,
-                            "emptyDown" : emptyDown ,
-                            "emptyLeft" : emptyLeft ,
-                            "emptyRight" : emptyRight ,
-                            "nearestGhost" : nearestGhost ,
-                            "nearestFood" : nearestFood ,
-                            "nearestGhost" : nearestGhost ,
-                            "nearestCapsule" : nearestCapsule ,
-                            "legalPositions" : legalPositions ,
-                            "legalPositionUp" : legalPositionUp ,
-                            "legalPositionDown" : legalPositionDown ,
-                            "legalPositionULeft" : legalPositionULeft ,
-                            "legalPositionRight" : legalPositionRight ,
-                            "pacmanPositionX" : pacmanPositionX ,
-                            "pacmanPositionY" : pacmanPositionY,
-                            "labelNextAction" : nextAction})
-  #TODO Nombre de bouffe totale en haut, gauche, droite
+  dataFrameCurrentState = [ ghostUp ,
+                             ghostDown ,
+                             ghostLeft ,
+                             ghostRight ,
+                            wallUp ,
+                            wallDown ,
+                            wallLeft ,
+                             wallRight ,
+                             foodUp ,
+                            foodDown ,
+                            foodLeft ,
+                             foodRight ,
+                           emptyUp ,
+                         emptyDown ,
+                         emptyLeft ,
+                         emptyRight ,
+                           nearestFood ,
+                       nearestGhostDistance ,
+                     nearestCapsule ,
+                       legalPositionUp ,
+                           legalPositionDown ,
+                       legalPositionULeft ,
+                           legalPositionRight ,
+                       pacmanPositionX ,
+                          pacmanPositionY,
+                       nextAction]
+  
+  return dataFrameCurrentState
+#TODO Nombre de bouffe totale en haut, gauche, droite
   
   
   
