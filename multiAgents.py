@@ -596,6 +596,17 @@ def wallHere(walls, position):
 def foodHere(foods, position):
   return foods[position[0]][position[1]]
 
+def getActionsNumber(action):
+  if action == "North":
+    return 0
+  if action == "South":
+    return 1
+  if action == "West":
+    return 2
+  if action == "East":
+    return 3
+
+
 def extractFeature(gameState, actionChoosed):
   # ce que y'a dans case haut,bas,gauche,droite
   # distance entre bouffe plus proche
@@ -651,7 +662,7 @@ def extractFeature(gameState, actionChoosed):
   #nearestGhost = 1 / nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
   nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
   nearestCapsule = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
-  nextAction = actionChoosed
+  nextAction = getActionsNumber(actionChoosed)
   
   # nextActionUp = "North" == nextAction
   # nextActionDown = "South" == nextAction
