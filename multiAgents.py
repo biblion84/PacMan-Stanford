@@ -332,8 +332,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 2100):
-        with open('dataGameWonMoreThan2000Map.csv', 'a') as f:
+      if (nextGameState.getScore() > 1500):
+        with open('dataGameWonMoreThan1500Map.csv', 'a') as f:
           self.dataFrame.to_csv(f, header=False)
           
     return  bestAction
@@ -688,10 +688,10 @@ def extractFeature(gameState, actionChoosed):
   
   return dataFrameCurrentState
 #TODO Nombre de bouffe totale en haut, gauche, droite
-  
-  
-  
-  
+
+
+
+
 
 
 class MonteCarloAgent(MultiAgentSearchAgent):
