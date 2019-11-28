@@ -342,6 +342,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           else :
             self.dataFrame.to_csv(f, header=True)
             self.alreadyWroteHeaders = True
+      else:
+        self.dataFrame = pd.DataFrame(
+          columns=["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
+                   "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
+                   "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
+                   "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "labelNextAction"])
     return  bestAction
 
 def AlreadyVisitedScore(position):
@@ -641,10 +647,10 @@ def extractFeature(gameState, actionChoosed):
   emptyLeft = 1 if  (ghostLeft + wallLeft + foodLeft) >= 0 else 0
   emptyRight = 1 if  (ghostRight + wallRight + foodRight) >= 0 else 0
   #nearestGhost(ghosts, position, walls, ghostsGrid):
-  nearestFood = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0  else 0
+  nearestFood =  float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0  else 0
   #nearestGhost = 1 / nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
-  nearestGhostDistance = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
-  nearestCapsule = 1 / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
+  nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
+  nearestCapsule = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
   nextAction = actionChoosed
   
   # nextActionUp = "North" == nextAction
@@ -659,8 +665,8 @@ def extractFeature(gameState, actionChoosed):
   legalPositionULeft = "West" in legalPositions
   legalPositionRight = "East" in legalPositions
   
-  pacmanPositionX = 1 / pacmanPosition[0]
-  pacmanPositionY = 1 / pacmanPosition[1]
+  pacmanPositionX = float(pacmanPosition[0])  / gameState.data.layout.width
+  pacmanPositionY = float(pacmanPosition[1]) /  gameState.data.layout.height
   
   dataFrameCurrentState = [ ghostUp ,
                               ghostDown ,
