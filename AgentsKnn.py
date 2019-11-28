@@ -1,25 +1,28 @@
 import pandas as pd
-import numpy
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn import neighbors
 
-path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/"
+path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMoreThan1500WithColumnNames.csv"
 
-
-
-dataTrain = pd.read_csv(path + "PacmanTrain.csv")
-dataTrain = pd.get_dummies(dataTrain)
-dataTest = pd.read_csv(path + "PacmanTest.csv")
-dataTest = pd.get_dummies(dataTest)
-
-
+dataTrain = pd.read_csv(path)
 print(dataTrain.head())
-print(dataTest.head())
+dataTarget = dataTrain["labelNextAction"]
+dataTrain = dataTrain.drop(columns=["labelNextAction"], axis=1)
 
-xtrain, xtest, ytrain, ytest = train_test_split(dataTrain, dataTest, train_size=0.8)
+
+
+print(dataTrain.shape)
+print(dataTarget.shape)
+
+print(dataTarget.head())
+print(dataTrain.head())
+
+xtrain, xtest, ytrain, ytest = train_test_split(dataTrain, dataTarget, train_size=0.8)
 
 knn = neighbors.KNeighborsClassifier(n_neighbors=3)
 knn.fit(xtrain, ytrain)
 
 error = 1 - knn.score(xtest, ytest)
+print(knn.score(xtest, ytest))
 print('Erreur: %f' % error)

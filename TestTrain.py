@@ -5,11 +5,11 @@ path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMo
 
 dataTrain = pd.read_csv(path)
 
-dataTest = dataTrain.drop("labelNextAction", axis=1)
+dataTarget = dataTrain["labelNextAction"]
 
 print(dataTrain.shape)
 #dataTrain = dataTrain.drop([0], axis=0)
-print(dataTest.shape)
+print(dataTarget.shape)
 #dataTest = dataTest.drop([0], axis=0)
 
 
@@ -18,7 +18,13 @@ print(dataTest.shape)
 #dataTrain.ghostUp = dataTrain.ghostUp.astype(float)
 #print(type(dataTrain.ghostUp[1]))
 print(dataTrain.head())
-print(dataTest.head())
+print(dataTarget.head())
 
-dataTest.to_csv("PacmanTest.csv")
+print(dataTrain.shape)
+print(dataTarget.shape)
+
+dataTarget.to_csv("PacmanTarget.csv")
 dataTrain.to_csv("PacmanTrain.csv")
+
+print(dataTrain.shape)
+print(dataTarget.shape)
