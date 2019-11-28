@@ -9,15 +9,9 @@
 from util import manhattanDistance, Queue
 from game import Directions, Actions
 import random, util
-from collections import defaultdict
-import math
 from game import Agent
 from MonteCarlo import MCTS, Node
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn import neighbors
-from sklearn.svm import SVC
-from sklearn.linear_model import Ridge
 
 dataColumns = ["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
                "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
