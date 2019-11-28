@@ -17,10 +17,7 @@ class KNNAgent(MultiAgentSearchAgent):
   
   def getAction(self, currGameState):
     data = pd.DataFrame(
-      columns=["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
-               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
-               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "labelNextAction"])
+      columns=dataColumns)
     data.loc[0, :] = extractFeature(currGameState, "South")
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
     nextActionNumber = self.knn.predict(dataTrain)

@@ -157,7 +157,7 @@ class MultiAgentSearchAgent(Agent):
     self.depth = int(depth)
     self.indexDataframe = 0
     self.alreadyWroteHeaders = False
-    self.dataFrame = pd.DataFrame(columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","lastAction" ,"labelNextAction"])
+    self.dataFrame = pd.DataFrame(columns=dataColumns)
 
 
 class MinimaxAgent(MultiAgentSearchAgent):
@@ -353,10 +353,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             self.alreadyWroteHeaders = True
       else:
         self.dataFrame = pd.DataFrame(
-          columns=["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
-                   "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
-                   "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-                   "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"])
+          columns=dataColumns)
     return  bestAction
 
 def AlreadyVisitedScore(position):
