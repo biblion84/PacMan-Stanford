@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import neighbors
 from multiAgents import MultiAgentSearchAgent
-
+from multiAgents import MultiAgentSearchAgent, extractFeature, getActionByNumber
 class KNNAgent(MultiAgentSearchAgent):
   def __init__(self):
     self.dataTrain = pd.read_csv("dataGameWonMoreThan1500WithColumnNames.csv")
