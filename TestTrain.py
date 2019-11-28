@@ -1,13 +1,11 @@
 import pandas as pd
 
 
-path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMoreThan1300WithColumnNames.csv"
+path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMoreThan1500WithColumnNames.csv"
 
 dataTrain = pd.read_csv(path)
 
 dataTest = dataTrain.drop("labelNextAction", axis=1)
-dataTrain = dataTrain.drop([1], axis=1)
-dataTest = dataTest.drop([1], axis=1)
 
 print(dataTrain.shape)
 #dataTrain = dataTrain.drop([0], axis=0)
@@ -22,5 +20,5 @@ print(dataTest.shape)
 print(dataTrain.head())
 print(dataTest.head())
 
-#dataTest.to_csv("PacmanTest.csv")
-#dataTrain.to_csv("PacmanTrain.csv")
+dataTest.to_csv("PacmanTest.csv")
+dataTrain.to_csv("PacmanTrain.csv")
