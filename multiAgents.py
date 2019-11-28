@@ -332,8 +332,11 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 1500):
-        with open('dataGameWonMoreThan1500Map.csv', 'a') as f:
+      if (nextGameState.getScore() > 1600):
+        with open('dataGameWonMoreThan1600WithColumnNames.csv', 'a') as f:
+          self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
+
+
           self.dataFrame.to_csv(f, header=False)
           
     return  bestAction
@@ -655,44 +658,36 @@ def extractFeature(gameState, actionChoosed):
   
   pacmanPositionX = 1 / pacmanPosition[0]
   pacmanPositionY = 1 / pacmanPosition[1]
-
-
-
   
   dataFrameCurrentState = [ ghostUp ,
-                             ghostDown ,
-                             ghostLeft ,
-                             ghostRight ,
-                            wallUp ,
-                            wallDown ,
-                            wallLeft ,
-                             wallRight ,
-                             foodUp ,
-                            foodDown ,
-                            foodLeft ,
-                             foodRight ,
-                           emptyUp ,
-                         emptyDown ,
-                         emptyLeft ,
-                         emptyRight ,
-                           nearestFood ,
-                       nearestGhostDistance ,
-                     nearestCapsule ,
-                       legalPositionUp ,
-                           legalPositionDown ,
-                       legalPositionULeft ,
-                           legalPositionRight ,
-                       pacmanPositionX ,
-                          pacmanPositionY,
-                       nextAction]
+                              ghostDown ,
+                              ghostLeft ,
+                              ghostRight ,
+                              wallUp ,
+                              wallDown ,
+                              wallLeft ,
+                              wallRight ,
+                              foodUp ,
+                              foodDown ,
+                              foodLeft ,
+                              foodRight ,
+                              emptyUp ,
+                              emptyDown ,
+                              emptyLeft ,
+                              emptyRight ,
+                              nearestFood ,
+                              nearestGhostDistance ,
+                              nearestCapsule ,
+                              legalPositionUp ,
+                              legalPositionDown ,
+                              legalPositionULeft ,
+                              legalPositionRight ,
+                              pacmanPositionX ,
+                              pacmanPositionY,
+                                nextAction]
   
   return dataFrameCurrentState
 #TODO Nombre de bouffe totale en haut, gauche, droite
-
-
-
-
-
 
 class MonteCarloAgent(MultiAgentSearchAgent):
   """
