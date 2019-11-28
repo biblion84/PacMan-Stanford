@@ -681,6 +681,7 @@ def extractFeature(gameState, actionChoosed):
   nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
   nearestCapsule = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
   nextAction = getActionsNumber(actionChoosed)
+  #produit scalaire du rapport de la direction de pacman avec le fantome pour savoir si il vont se catapulter
   lastAction = getActionsNumber(BadAction(HistoActions))
 
   # nextActionUp = "North" == nextAction
@@ -753,3 +754,4 @@ class MonteCarloAgent(MultiAgentSearchAgent):
     nextMoveBoardState = self.tree.choose(Node(currGameState))
     return nextMoveBoardState.gameState.data.agentStates[0].configuration.direction
 
+lastAction = "None"

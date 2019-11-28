@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import neighbors
 from sklearn.svm import SVC
 from sklearn.linear_model import Ridge
-from multiAgents import MultiAgentSearchAgent
+from multiAgents import MultiAgentSearchAgent, extractFeature, getActionByNumber
 
 class RidgeAgent(MultiAgentSearchAgent):
   def __init__(self):
