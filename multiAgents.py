@@ -351,7 +351,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           columns=["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
                    "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
                    "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-                   "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "labelNextAction"])
+                   "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"])
     return  bestAction
 
 def AlreadyVisitedScore(position):
@@ -676,7 +676,8 @@ def extractFeature(gameState, actionChoosed):
   nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
   nearestCapsule = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
   nextAction = getActionsNumber(actionChoosed)
-  
+  lastAction = getActionsNumber(BadAction(HistoActions))
+
   # nextActionUp = "North" == nextAction
   # nextActionDown = "South" == nextAction
   # nextActionLeft = "West" == nextAction
@@ -717,6 +718,7 @@ def extractFeature(gameState, actionChoosed):
                               legalPositionRight ,
                               pacmanPositionX ,
                               pacmanPositionY,
+                              lastAction,
                                 nextAction]
   return dataFrameCurrentState
 #TODO Nombre de bouffe totale en haut, gauche, droite
