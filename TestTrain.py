@@ -1,16 +1,26 @@
 import pandas as pd
 
 
-path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMoreThan1500Map.csv"
+path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMoreThan1300WithColumnNames.csv"
 
-data = pd.read_csv(path)
+dataTrain = pd.read_csv(path)
 
-print(data.shape)
+dataTest = dataTrain.drop("labelNextAction", axis=1)
+dataTrain = dataTrain.drop([1], axis=1)
+dataTest = dataTest.drop([1], axis=1)
 
-print(data.describe())
+print(dataTrain.shape)
+#dataTrain = dataTrain.drop([0], axis=0)
+print(dataTest.shape)
+#dataTest = dataTest.drop([0], axis=0)
 
-data.drop([0], axis=0)
 
-print(data.shape)
+#print(dataTrain.shape)
+#print(dataTest.shape)
+#dataTrain.ghostUp = dataTrain.ghostUp.astype(float)
+#print(type(dataTrain.ghostUp[1]))
+print(dataTrain.head())
+print(dataTest.head())
 
-print(data.head(5))
+#dataTest.to_csv("PacmanTest.csv")
+#dataTrain.to_csv("PacmanTrain.csv")
