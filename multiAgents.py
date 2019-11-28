@@ -147,7 +147,7 @@ class MultiAgentSearchAgent(Agent):
     self.evaluationFunction = util.lookup(evalFn, globals())
     self.depth = int(depth)
     self.indexDataframe = 0
-    self.dataFrame = pd.DataFrame( columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"])
+    self.dataFrame = pd.DataFrame(columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"])
 
 
 class MinimaxAgent(MultiAgentSearchAgent):
@@ -328,16 +328,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
     HistoActions.append(bestAction)
     AlreadyVisited.append(nextGameState.getPacmanPosition())
-    self.dataFrame.loc[self.indexDataframe] = extractFeature(currGameState, bestAction)
+    self.dataFrame.loc[self.indexDataframe, :] = extractFeature(currGameState, bestAction)
     self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 1600):
-        with open('dataGameWonMoreThan1600WithColumnNames.csv', 'a') as f:
-          self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
-
-
-          self.dataFrame.to_csv(f, header=False)
+      if (nextGameState.getScore() > 1300):
+        with open('dataGameWonMoreThan1300WithColumnNames.csv', 'a') as f:
+          # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
+          self.dataFrame.to_csv(f, header=True)
           
     return  bestAction
 
@@ -685,7 +683,6 @@ def extractFeature(gameState, actionChoosed):
                               pacmanPositionX ,
                               pacmanPositionY,
                                 nextAction]
-  
   return dataFrameCurrentState
 #TODO Nombre de bouffe totale en haut, gauche, droite
 
