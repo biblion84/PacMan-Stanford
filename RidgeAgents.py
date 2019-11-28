@@ -1,8 +1,16 @@
-import random
+from util import manhattanDistance, Queue
+from game import Directions, Actions
+import random, util
+from collections import defaultdict
+import math
+from game import Agent
+from MonteCarlo import MCTS, Node
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import neighbors
-from multiAgents import MultiAgentSearchAgent, extractFeature, getActionByNumber
+from sklearn.svm import SVC
+from sklearn.linear_model import Ridge
+from multiAgents import MultiAgentSearchAgent
 
 class RidgeAgent(MultiAgentSearchAgent):
   def __init__(self):

@@ -19,6 +19,11 @@ from sklearn import neighbors
 from sklearn.svm import SVC
 from sklearn.linear_model import Ridge
 
+dataColumns = ["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
+               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
+               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
+               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "labelNextAction"]
+
 class ReflexAgent(Agent):
   """
     A reflex agent chooses an action at each choice point by examining

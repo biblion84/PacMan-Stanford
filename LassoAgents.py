@@ -8,7 +8,9 @@ from MonteCarlo import MCTS, Node
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import neighbors
-from multiAgents import MultiAgentSearchAgent, extractFeature, getActionByNumber
+from sklearn.svm import SVC
+from sklearn.linear_model import Ridge
+from multiAgents import MultiAgentSearchAgent
 
 
 class LassoAgents(MultiAgentSearchAgent):
@@ -23,10 +25,7 @@ class LassoAgents(MultiAgentSearchAgent):
   
   def getAction(self, currGameState):
     data = pd.DataFrame(
-      columns=["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
-               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
-               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "labelNextAction"])
+      columns=dataColumns)
     data.loc[0, :] = extractFeature(currGameState, "South")
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
     nextActionNumber = self.knn.predict(dataTrain)
