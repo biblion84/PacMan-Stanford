@@ -147,6 +147,7 @@ class MultiAgentSearchAgent(Agent):
     self.evaluationFunction = util.lookup(evalFn, globals())
     self.depth = int(depth)
     self.indexDataframe = 0
+    self.alreadyWroteHeaders = False
     self.dataFrame = pd.DataFrame(columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"])
 
 
@@ -332,11 +333,15 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 1300):
-        with open('dataGameWonMoreThan1300WithColumnNames.csv', 'a') as f:
+      if (nextGameState.getScore() > 1500):
+        with open('dataGameWonMoreThan1500WithColumnNames.csv', 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
-          self.dataFrame.to_csv(f, header=True)
           
+          if (self.alreadyWroteHeaders):
+            self.dataFrame.to_csv(f, header=False)
+          else :
+            self.dataFrame.to_csv(f, header=True)
+            self.alreadyWroteHeaders = True
     return  bestAction
 
 def AlreadyVisitedScore(position):
