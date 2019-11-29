@@ -25,7 +25,7 @@ class SVMAgent(MultiAgentSearchAgent):
     data = pd.DataFrame(
       columns=dataColumns)
     data.loc[0, :] = extractFeature(currGameState, "South")
-    data.drop(columns=["labelNextAction"], axis=1)
+    data = data.drop(columns=["labelNextAction"], axis=1)
     nextActionNumber = self.svclassifier.predict(data)
 
     nextPredictedAction = getActionByNumber(nextActionNumber)
