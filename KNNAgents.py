@@ -5,7 +5,6 @@ from sklearn import neighbors
 class KNNAgent(MultiAgentSearchAgent):
   def __init__(self):
     self.dataTrain = pd.read_csv("dataGameWonMoreThan1500WithColumnNames.csv")
-    self.dataTrain = self.dataTrain.drop(self.dataTrain.columns[0], axis=1)
     self.dataTarget = self.dataTrain["labelNextAction"]
     self.dataTrain = self.dataTrain.drop(columns=["labelNextAction"], axis=1)
     xtrain, xtest, ytrain, ytest = train_test_split(self.dataTrain, self.dataTarget, train_size=0.8)
