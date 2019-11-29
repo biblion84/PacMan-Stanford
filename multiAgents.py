@@ -442,9 +442,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     
     HistoActions.append(bestAction)
     AlreadyVisited.append(nextGameState.getPacmanPosition())
-    self.dataFrame.loc[self.indexDataframe, :] = extractFeature(currGameState, bestAction)
-    lastAction[0] = getActionsNumber(bestAction)
-    self.indexDataframe = self.indexDataframe + 1
+
+    oldSore = currGameState.getScore()
+    newScore = currGameState.generateSuccessor(0, bestAction).getScore()
+    if (newScore > oldSore):
+        self.dataFrame.loc[self.indexDataframe, :] = extractFeature(currGameState, bestAction)
+        lastAction[0] = getActionsNumber(bestAction)
+        self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
       if (nextGameState.getScore() > 1500):

@@ -7,6 +7,8 @@ path = "/Users/macbookpro/Desktop/Ynov/A.I./pacman/PacMan-Stanford/dataGameWonMo
 
 dataTrain = pd.read_csv(path)
 print(dataTrain.head())
+dataTrain = dataTrain.drop(["lastAction"], axis=1)
+dataTrain = dataTrain.drop(["Unnamed: 0"], axis=1)
 dataTarget = dataTrain["labelNextAction"]
 dataTrain = dataTrain.drop(columns=["labelNextAction"], axis=1)
 
