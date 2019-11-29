@@ -12,11 +12,10 @@ import random, util
 from game import Agent
 from MonteCarlo import MCTS, Node
 import pandas as pd
+import numpy as np
 
-dataColumns = ["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
-               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
-               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"]
+dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
+               "nearestFood", "nearestGhost", "nearestCapsule", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"]
 
 def scoreEvaluationFunction(currentGameState):
   return currentGameState.getScore()
@@ -144,11 +143,15 @@ def ghostHere(ghosts, position):
       return True
   return False
 
-def wallHere(walls, position):
-  return walls[position[0]][position[1]]
-
-def foodHere(foods, position):
+def inGrid(foods, position):
+  if foods is None:
+    return False
+  if (position[0] >= len(foods.data)):
+    return False
+  if (position[1] >= len(foods[00])):
+    return False
   return foods[position[0]][position[1]]
+
 
 def getActionsNumber(action):
   if action == "North":
@@ -159,6 +162,7 @@ def getActionsNumber(action):
     return 2
   if action == "East":
     return 3
+  return 0
 
 def getActionByNumber(number):
   if number == 0:
@@ -206,15 +210,15 @@ def extractFeature(gameState, actionChoosed):
   ghostLeft = ghostHere(ghosts, [pacmanPosition[0] - 1, pacmanPosition[1]])
   ghostRight = ghostHere(ghosts, [pacmanPosition[0] + 1, pacmanPosition[1]])
 
-  wallUp = wallHere(walls, [pacmanPosition[0], pacmanPosition[1] + 1])
-  wallDown = wallHere(walls, [pacmanPosition[0], pacmanPosition[1] - 1])
-  wallLeft = wallHere(walls, [pacmanPosition[0] - 1, pacmanPosition[1]])
-  wallRight = wallHere(walls, [pacmanPosition[0] + 1, pacmanPosition[1]])
+  wallUp = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] + 1])
+  wallDown = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] - 1])
+  wallLeft = inGrid(walls, [pacmanPosition[0] - 1, pacmanPosition[1]])
+  wallRight = inGrid(walls, [pacmanPosition[0] + 1, pacmanPosition[1]])
   
-  foodUp = foodHere(foods, [pacmanPosition[0], pacmanPosition[1] + 1])
-  foodDown = foodHere(foods, [pacmanPosition[0], pacmanPosition[1] - 1])
-  foodLeft = foodHere(foods, [pacmanPosition[0] - 1, pacmanPosition[1]])
-  foodRight = foodHere(foods, [pacmanPosition[0] + 1, pacmanPosition[1]])
+  foodUp = inGrid(foods, [pacmanPosition[0], pacmanPosition[1] + 1])
+  foodDown = inGrid(foods, [pacmanPosition[0], pacmanPosition[1] - 1])
+  foodLeft = inGrid(foods, [pacmanPosition[0] - 1, pacmanPosition[1]])
+  foodRight = inGrid(foods, [pacmanPosition[0] + 1, pacmanPosition[1]])
   
   emptyUp = 1 if  (ghostUp + wallUp + foodUp) >= 0 else 0
   emptyDown = 1 if  (ghostDown + wallDown + foodDown) >= 0 else 0
@@ -243,29 +247,11 @@ def extractFeature(gameState, actionChoosed):
   pacmanPositionX = float(pacmanPosition[0])  / gameState.data.layout.width
   pacmanPositionY = float(pacmanPosition[1]) /  gameState.data.layout.height
   
-  dataFrameCurrentState = [ ghostUp ,
-                              ghostDown ,
-                              ghostLeft ,
-                              ghostRight ,
-                              wallUp ,
-                              wallDown ,
-                              wallLeft ,
-                              wallRight ,
-                              foodUp ,
-                              foodDown ,
-                              foodLeft ,
-                              foodRight ,
-                              emptyUp ,
-                              emptyDown ,
-                              emptyLeft ,
-                              emptyRight ,
+  dataFrameCurrentState = getSurroundingMatrix(gameState) + \
+                          [
                               nearestFood ,
                               nearestGhostDistance ,
                               nearestCapsule ,
-                              legalPositionUp ,
-                              legalPositionDown ,
-                              legalPositionULeft ,
-                              legalPositionRight ,
                               pacmanPositionX ,
                               pacmanPositionY,
                               lastAction[0],
@@ -446,7 +432,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     oldSore = currGameState.getScore()
     newScore = currGameState.generateSuccessor(0, bestAction).getScore()
     if (newScore > oldSore):
-        self.dataFrame.loc[self.indexDataframe, :] = extractFeature(currGameState, bestAction)
+        features = extractFeature(currGameState, bestAction)
+        self.dataFrame.loc[self.indexDataframe, :] = features
         lastAction[0] = getActionsNumber(bestAction)
         self.indexDataframe = self.indexDataframe + 1
     
@@ -462,28 +449,58 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             self.alreadyWroteHeaders = True
     return bestAction
 
+def getMatrixDataframe(matrix, actionTaken):
+  if not actionTaken >= 0:
+    actionTaken = 0
+  matrix.append(getActionsNumber(actionTaken))
+  return  matrix
 
 
 class ReflexAgent(Agent):
   
   
   def getAction(self, gameState):
+    pacmanPosition = gameState.getPacmanPosition()
+    ghosts = gameState.getGhostStates()
+    walls = gameState.getWalls()
+    foods = gameState.getFood()
+    foodNumber = gameState.getNumFood()
+    capsules = gameState.getCapsules()
+    ghostsGrid = foods.copy()
+    capsulesGrid = foods.copy()
+  
+    for ghostRow in ghostsGrid:
+      for ghostCol in range(0, len(ghostRow) - 1):
+        ghostRow[ghostCol] = False
+  
+    for ghost in ghosts:
+      ghostPosition = ghost.getPosition()
+      x = int(ghostPosition[0])
+      y = int(ghostPosition[1])
+      ghostsGrid[x][y] = True
+      
     legalMoves = gameState.getLegalActions()
-
+    legalMoves.remove(Directions.STOP)
     # Choose one of the best actions
     scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
     bestScore = max(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
     chosenIndex = random.choice(bestIndices) # Pick randomly among the best
     bestAction = legalMoves[chosenIndex]
-    
-    self.dataFrame.loc[self.indexDataframe, :] = extractFeature(gameState, bestAction)
+    if bestAction == None:
+      bestAction = legalMoves[0]
+    matrix = getSurroundingMatrix(gameState)
     lastAction[0] = getActionsNumber(bestAction)
-    self.indexDataframe = self.indexDataframe + 1
+
+    # matrixDataframe = getMatrixDataframe(matrix, bestAction)
     nextGameState = gameState.generatePacmanSuccessor(bestAction)
+    if nextGameState.getScore() > gameState.getScore() or   nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid) == 1:
+      # self.dataFrameMatrix.loc[self.indexDataframe, :] =  matrixDataframe
+      self.dataFrame.loc[self.indexDataframe, :] = extractFeature(gameState, bestAction)
+      self.indexDataframe = self.indexDataframe + 1
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 1500):
-        with open('ReflexDataMore1500.csv', 'a') as f:
+      if (nextGameState.getScore() > 1200):
+        with open('ReflexMatrix.csv', 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
       
           if (self.alreadyWroteHeaders):
@@ -533,38 +550,55 @@ def outOfMapX(x, layout):
     return False
   
 def outOfMap(x, y, layout):
-  if y >= 0 and y <= layout.height:
-    return True
-  else:
+  if y >= 0 and y <= layout.height and x >= 0 and x <= layout.width:
     return False
+  else:
+    return True
 
+def getCapsuleGrid(foods, capsules):
+  capsulesGrid = foods.copy()
+  
+  for capsuleRow in capsulesGrid:
+    for capsuleCol in range(0, len(capsuleRow) - 1):
+      capsuleRow[capsuleCol] = False
+  
+  for capsule in capsules:
+    capsulesGrid[capsule[0]][capsule[1]] = True
+    
+    return  capsulesGrid
 
 def getSurroundingMatrix(gameState):
   ghosts = gameState.getGhostStates()
   walls = gameState.getWalls()
   foods = gameState.getFood()
-  capsules = gameState.getCapsules()
+  capsules = getCapsuleGrid(foods, gameState.getCapsules())
   
   initialPacmanPosition = gameState.getPacmanState().getPosition()
-  xP = initialPacmanPosition.x
-  yP = initialPacmanPosition.x
+  xP = initialPacmanPosition[0]
+  yP = initialPacmanPosition[1]
   matrix = []
-  for x in range(-2, 2):
-    for y in range(-2,2):
-      if outOfMap(xP, yP, gameState.layout):
+  for x in range(-2, 3):
+    for y in range(-2,3):
+      xTest = xP + x
+      yTest = yP + y
+      
+      if outOfMap(xTest, yTest, gameState.data.layout):
         matrix.append(0)
-        break
+        continue
+      if xTest == xP and yTest == yP:
+        continue
         
-      # bitmap = 2 # 2^1
-      # if foodHere(foods, [xP, yP]):
-      #   bitmap += 4 # 2^2
-      # if capsuleHere(capsules, [xP, yP]):
-      #   bitmap += 8 # 2^3
-      # if ghostHere(ghosts, [xP, yP]):
-      #   bitmap += 16 # 2^4
-      # if wallHere(walls, [xP, yP]):
-      #   bitmap += 32 # 2^5
-
+      bitmap = 2 # 2^1
+      if inGrid(foods, [xTest, yTest]):
+        bitmap += 4 # 2^2
+      if inGrid(capsules, [xTest, yTest]):
+        bitmap += 8 # 2^3
+      if ghostHere(ghosts, [xTest, yTest]):
+        bitmap += 16 # 2^4
+      if inGrid(walls, [xTest, yTest]):
+        bitmap += 32 # 2^5*
+      matrix.append(bitmap)
+  return matrix
         
 
 # Abbreviation

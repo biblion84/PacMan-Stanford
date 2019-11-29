@@ -22,10 +22,10 @@ except:
 # Parts worth reading #
 #######################
 
-dataColumns = ["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
-               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
-               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
-               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"]
+dataColumns = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
+               "nearestFood", "nearestGhost", "nearestCapsule", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"]
+
+dataColumnsMatrix = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","Action" ]
 class Agent:
   """
   An agent must define a getAction method, but may also define the
@@ -40,6 +40,7 @@ class Agent:
     self.indexDataframe = 0
     self.alreadyWroteHeaders = False
     self.dataFrame = pd.DataFrame(columns=dataColumns)
+    self.dataFrameMatrix = pd.DataFrame(columns=dataColumnsMatrix)
     
   def getAction(self, state):
     """
