@@ -22,6 +22,7 @@ import keras
 from keras import losses
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.utils import to_categorical
 
 class ReflexAgent(Agent):
   """
@@ -733,17 +734,18 @@ class KerasAgent(MultiAgentSearchAgent):
     model.add(Dense(units=128, activation='relu'))
     # model.add(Dense(units=128, activation='relu'))
     # model.add(Dense(units=128, activation='relu'))
-    model.add(Dense(units=1, activation='relu'))
+    model.add(Dense(units=4, activation='relu'))
     # model.summary()
-    model.compile(loss=losses.mean_squared_error,
-                  optimizer='sgd',
+    model.compile(loss=losses.categorical_crossentropy,
+                  optimizer='adam',
                   metrics=['accuracy'])
-    model.compile(loss=keras.losses.mean_squared_error,
-                  optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True))
+    # model.compile(loss=keras.losses.categorical_crossentropy,
+    #               optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True))
     self.dataTrain = pd.read_csv("dataGameWonMoreThan1500WithColumnNames.csv")
     self.dataTrain = self.dataTrain.drop(self.dataTrain.columns[0], axis=1)
     self.dataTarget = self.dataTrain["labelNextAction"]
     self.dataTrain = self.dataTrain.drop(columns=["labelNextAction"], axis=1)
+    self.dataTarget = to_categorical(self.dataTarget)
     model.fit(self.dataTrain, self.dataTarget, epochs=5, batch_size=128)
     loss_and_metrics = model.evaluate(self.dataTrain, self.dataTarget)
     self.model = model
@@ -753,10 +755,9 @@ class KerasAgent(MultiAgentSearchAgent):
     data = pd.DataFrame(columns=["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"])
     data.loc[0,:] = extractFeature(currGameState, "South")
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
-    nextActionNumber = self.model.predict(dataTrain)
+    nextActionNumber = self.model.predict_classes(dataTrain)
     print (nextActionNumber)
     nextPredictedAction = getActionByNumber(nextActionNumber)
-    
     
     if (nextPredictedAction not in currGameState.getLegalActions(0) ):
       print("Illegal Action")
