@@ -26,10 +26,10 @@ class TrainKerasAgent(MultiAgentSearchAgent):
     model = Sequential()
     model.add(Dense(units=128, activation='softmax', input_dim=26))
     model.add(Dense(units=128, activation='relu'))
-    model.add(Dense(units=4, activation='relu'))
+    model.add(Dense(units=4, activation='softmax'))
     # model.summary()
     model.compile(loss=losses.categorical_crossentropy,
-                  optimizer='adam',
+                  optimizer='rmsprop',
                   metrics=['accuracy'])
     # model.compile(loss=keras.losses.categorical_crossentropy,
     #               optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True))
@@ -60,7 +60,7 @@ class KerasAgent(MultiAgentSearchAgent):
     data.loc[0, :] = extractFeature(currGameState, "South")
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
     nextActionNumber = self.model.predict_classes(dataTrain)
-    print (nextActionNumber)
+    # print (nextActionNumber)
     nextPredictedAction = getActionByNumber(nextActionNumber)
 
     if (nextPredictedAction not in currGameState.getLegalActions(0)):
