@@ -10,6 +10,7 @@ from util import *
 from util import raiseNotDefined
 import time, os
 import traceback
+import pandas as pd
 
 try:
   import boinc
@@ -21,6 +22,10 @@ except:
 # Parts worth reading #
 #######################
 
+dataColumns = ["ghostUp", "ghostDown", "ghostLeft", "ghostRight", "wallUp", "wallDown", "wallLeft", "wallRight",
+               "foodUp", "foodDown", "foodLeft", "foodRight", "emptyUp", "emptyDown", "emptyLeft", "emptyRight",
+               "nearestFood", "nearestGhost", "nearestCapsule", "legalPositionUp", "legalPositionDown",
+               "legalPositionULeft", "legalPositionRight", "pacmanPositionX", "pacmanPositionY", "lastAction", "labelNextAction"]
 class Agent:
   """
   An agent must define a getAction method, but may also define the
@@ -30,7 +35,12 @@ class Agent:
   """
   def __init__(self, index=0):
     self.index = index
-
+    self.alreadyWroteHeaders = False
+    self.index = 0 # Pacman is always agent index 0
+    self.indexDataframe = 0
+    self.alreadyWroteHeaders = False
+    self.dataFrame = pd.DataFrame(columns=dataColumns)
+    
   def getAction(self, state):
     """
     The Agent will receive a GameState (from either {pacman, capture, sonar}.py) and

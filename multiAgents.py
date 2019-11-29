@@ -464,6 +464,108 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 
 
+class ReflexAgent(Agent):
+  
+  
+  def getAction(self, gameState):
+    legalMoves = gameState.getLegalActions()
+
+    # Choose one of the best actions
+    scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
+    bestScore = max(scores)
+    bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+    chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+    bestAction = legalMoves[chosenIndex]
+    
+    self.dataFrame.loc[self.indexDataframe, :] = extractFeature(gameState, bestAction)
+    lastAction[0] = getActionsNumber(bestAction)
+    self.indexDataframe = self.indexDataframe + 1
+    nextGameState = gameState.generatePacmanSuccessor(bestAction)
+    if (nextGameState.isWin()):
+      if (nextGameState.getScore() > 1500):
+        with open('ReflexDataMore1500.csv', 'a') as f:
+          # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
+      
+          if (self.alreadyWroteHeaders):
+            self.dataFrame.to_csv(f, header=False, index=False)
+          else:
+            self.dataFrame.to_csv(f, header=True, index=False)
+            self.alreadyWroteHeaders = True
+    "Add more of your code here if you want to"
+
+    return legalMoves[chosenIndex]
+
+  def evaluationFunction(self, currGameState, pacManAction):
+    nextGameState = currGameState.generatePacmanSuccessor(pacManAction)
+    oldPos = currGameState.getPacmanPosition()
+    newPos = nextGameState.getPacmanPosition()
+    oldFood = currGameState.getNumFood()
+    newFood = nextGameState.getNumFood()
+    remainingFood = nextGameState.getFood()
+    newGhostStates = nextGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    ghosts = nextGameState.getGhostPositions()
+
+    scaredTimesInSecond = newGhostStates[0].scaredTimer
+
+    "*** YOUR CODE HERE ***"
+    score = 0
+    if (newFood < oldFood):
+      score += 1
+    if oldPos == newPos:
+      score -= 15
+
+    for ghost in newGhostStates:
+      distanceFromGhost = util.manhattanDistance(newPos, ghost.getPosition())
+      # Si on est proche d'un phantome pendant qu'ils sont mangeable c'est vraiment bien
+      if distanceFromGhost <= 3 and ghost.scaredTimer >= 2:
+        score += 200
+      # Si on est proche et qu'ils sont pas mangeable c'est moins top d'un coups
+      elif distanceFromGhost <= 1:
+            score -= 20
+    return nextGameState.getScore() +  score
+
+
+def outOfMapX(x, layout):
+  if x >= 0 and x <= layout.width:
+    return True
+  else:
+    return False
+  
+def outOfMap(x, y, layout):
+  if y >= 0 and y <= layout.height:
+    return True
+  else:
+    return False
+
+
+def getSurroundingMatrix(gameState):
+  ghosts = gameState.getGhostStates()
+  walls = gameState.getWalls()
+  foods = gameState.getFood()
+  capsules = gameState.getCapsules()
+  
+  initialPacmanPosition = gameState.getPacmanState().getPosition()
+  xP = initialPacmanPosition.x
+  yP = initialPacmanPosition.x
+  matrix = []
+  for x in range(-2, 2):
+    for y in range(-2,2):
+      if outOfMap(xP, yP, gameState.layout):
+        matrix.append(0)
+        break
+        
+      # bitmap = 2 # 2^1
+      # if foodHere(foods, [xP, yP]):
+      #   bitmap += 4 # 2^2
+      # if capsuleHere(capsules, [xP, yP]):
+      #   bitmap += 8 # 2^3
+      # if ghostHere(ghosts, [xP, yP]):
+      #   bitmap += 16 # 2^4
+      # if wallHere(walls, [xP, yP]):
+      #   bitmap += 32 # 2^5
+
+        
 
 # Abbreviation
 better = betterEvaluationFunction

@@ -11,7 +11,7 @@ class KNNAgent(MultiAgentSearchAgent):
     data = pd.DataFrame(
       columns=dataColumns)
     data.loc[0, :] = extractFeature(currGameState, "South")
-    dataTrain = data.drop(columns=["labelNextAction"], axis=1)
+    dataTrain = data.drop(columns=["labelNextAction"], axis=8)
     nextActionNumber = self.knn.predict(dataTrain)
     
     nextPredictedAction = getActionByNumber(nextActionNumber)
