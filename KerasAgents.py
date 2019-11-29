@@ -16,17 +16,16 @@ from keras import losses
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.utils import to_categorical
+import pickle
 
 
-class KerasAgent(MultiAgentSearchAgent):
+class TrainKerasAgent(MultiAgentSearchAgent):
   model = None
 
   def __init__(self):
     model = Sequential()
     model.add(Dense(units=128, activation='softmax', input_dim=26))
     model.add(Dense(units=128, activation='relu'))
-    # model.add(Dense(units=128, activation='relu'))
-    # model.add(Dense(units=128, activation='relu'))
     model.add(Dense(units=4, activation='relu'))
     # model.summary()
     model.compile(loss=losses.categorical_crossentropy,
@@ -40,9 +39,21 @@ class KerasAgent(MultiAgentSearchAgent):
     self.dataTrain = self.dataTrain.drop(columns=["labelNextAction"], axis=1)
     self.dataTarget = to_categorical(self.dataTarget)
     model.fit(self.dataTrain, self.dataTarget, epochs=3, batch_size=128)
+    with open('keras.pickle', 'wb') as handle:
+      pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
     loss_and_metrics = model.evaluate(self.dataTrain, self.dataTarget)
     self.model = model
     print(loss_and_metrics)
+    print("keras.pickle saved")
+    exit(1)
+
+class KerasAgent(MultiAgentSearchAgent):
+  model = None
+
+  def __init__(self):
+    with open('keras.pickle', 'rb') as handle:
+      model = pickle.load(handle)
+    self.model = model
 
   def getAction(self, currGameState):
     data = pd.DataFrame(columns=dataColumns)
@@ -55,6 +66,7 @@ class KerasAgent(MultiAgentSearchAgent):
     if (nextPredictedAction not in currGameState.getLegalActions(0)):
       print("Illegal Action")
       print(nextPredictedAction)
-      nextPredictedAction = currGameState.getLegalActions(0)[random.randrange(0, len(currGameState.getLegalActions(0)))]
+      nextPredictedAction = currGameState.getLegalActions(0)[
+        random.randrange(0, len(currGameState.getLegalActions(0)))]
 
     return nextPredictedAction
