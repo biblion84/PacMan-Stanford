@@ -274,19 +274,18 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     return  bestAction
 
 
-
 class ExpectimaxAgent(MultiAgentSearchAgent):
   """
     Your expectimax agent (question 4)
   """
-
+  
   def getAction(self, currGameState):
     """
       Returns the expectimax action using self.depth and self.evaluationFunction
-
       All ghosts should be modeled as choosing uniformly at random from their
       legal moves.
     """
+    
     def expectiMax(gameState, depth, alpha, beta, agent):
       if depth == 0 or gameState.isLose() or gameState.isWin():
         return self.evaluationFunction(gameState)
@@ -307,15 +306,15 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         if nextAgent == gameState.getNumAgents():
           nextAgent = 0
           depth = depth - 1
-        #value = float('inf')
+        # value = float('inf')
         actions = gameState.getLegalActions(agent)
         values = []
         for action in actions:
-          values.append(expectiMax(gameState.generateSuccessor(agent, action), depth, alpha, beta,nextAgent))
-        return (sum(values)/len(values))
+          values.append(expectiMax(gameState.generateSuccessor(agent, action), depth, alpha, beta, nextAgent))
+        return (sum(values) / len(values))
         beta = min(beta, value)
         return value
-
+    
     legalActions = currGameState.getLegalActions(0)
     legalActions.remove(Directions.STOP)
     bestAction = legalActions[0]
@@ -323,13 +322,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     nextGameState = False
     for action in legalActions:
       nextGS = currGameState.generateSuccessor(0, action)
-      value = expectiMax(nextGS, self.depth, -float('inf'),float('inf'), 1)
-      value -=  AlreadyVisitedScore(nextGS.getPacmanPosition()) * 0.1
-      if value > valueOfAction: # Here we can see that value == value of action a lot
-        bestAction = action # I need to change the evaluation function to change that
+      value = expectiMax(nextGS, self.depth, -float('inf'), float('inf'), 1)
+      value -= AlreadyVisitedScore(nextGS.getPacmanPosition()) * 0.1
+      if value > valueOfAction:  # Here we can see that value == value of action a lot
+        bestAction = action  # I need to change the evaluation function to change that
         valueOfAction = value
         nextGameState = currGameState.generateSuccessor(0, action)
-
+    
     HistoActions.append(bestAction)
     AlreadyVisited.append(nextGameState.getPacmanPosition())
     self.dataFrame.loc[self.indexDataframe, :] = extractFeature(currGameState, bestAction)
@@ -342,26 +341,24 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           
           if (self.alreadyWroteHeaders):
             self.dataFrame.to_csv(f, header=False)
-          else :
+          else:
             self.dataFrame.to_csv(f, header=True)
             self.alreadyWroteHeaders = True
-      else:
-        self.dataFrame = pd.DataFrame(
-          columns=dataColumns)
-    return  bestAction
+    return bestAction
+
 
 def AlreadyVisitedScore(position):
   countAlreadyVisited = AlreadyVisited.count(position)
   if countAlreadyVisited == 0:
     return 0
-  else :
+  else:
     return 1 - (float(1) / countAlreadyVisited)
+
 
 def betterEvaluationFunction(currGameState):
   """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
-
     DESCRIPTION: <write something here so we know what you did>
   """
   pacman = currGameState.getPacmanState()
@@ -373,91 +370,90 @@ def betterEvaluationFunction(currGameState):
   ghosts = currGameState.getGhostStates()
   ghostsGrid = foods.copy()
   capsulessGrid = foods.copy()
-
+  
   for ghostRow in ghostsGrid:
-    for ghostCol in range(0, len(ghostRow) -1):
+    for ghostCol in range(0, len(ghostRow) - 1):
       ghostRow[ghostCol] = False
-
+  
   for ghost in ghosts:
     ghostPosition = ghost.getPosition()
     x = int(ghostPosition[0])
     y = int(ghostPosition[1])
     ghostsGrid[x][y] = True
-
+  
   for capsuleRow in capsulessGrid:
-    for capsuleCol in range(0, len(capsuleRow) -1):
+    for capsuleCol in range(0, len(capsuleRow) - 1):
       capsuleRow[capsuleCol] = False
-
+  
   for capsule in capsules:
     capsulessGrid[capsule[0]][capsule[1]] = True
-
-
-
+  
   scoreGhostAfraid = 0
   # for ghost in ghosts:
   #   if ghost.scaredTimer > 2:
   #     scoreGhostAfraid += 50
-
+  
   pacmanConfDir = pacman.configuration.direction
   badposition = BadAction(HistoActions)
-
+  
   scoreBadPos = 0
   # if pacmanConfDir == badposition:
   #     scoreBadPos = -5
-
+  
   # if position in AlreadyVisited:
   #   scoreBadPos -= 1
-
+  
   nearestFoodToPacman = nearestFoodGansterDjikstra(position, walls, foods) + nearestFood(foods, position)
-  if nearestFoodToPacman ==  200:
+  if nearestFoodToPacman == 200:
     nearestFoodToPacman = nearestFood(foods, position)
-
-  if (foodRemaining < 1) :
-      nearestFoodToPacman = nearestFood(foods, position)
-
+  
+  if (foodRemaining < 1):
+    nearestFoodToPacman = nearestFood(foods, position)
+  
   nGhost = nearestGhost(ghosts, position, walls, ghostsGrid.copy())
   fleeingScore = 0
   ghostScared = False
   scaredGhosts = []
   for ghost in ghosts:
     # if ghost.scaredTimer > util.manhattanDistance(position, ghost.getPosition()):
-      # scaredGhosts.append(ghost)
-    if ghost.scaredTimer > 0 :
+    # scaredGhosts.append(ghost)
+    if ghost.scaredTimer > 0:
       ghostScared = True
       scaredGhosts.append(ghost)
-
+  
   distanceNearestGhost = nearestFoodGansterDjikstra(position, walls, ghostsGrid)
-
+  
   if distanceNearestGhost <= 2:
     if (nGhost.scaredTimer > 2):
       fleeingScore += 100
-    else :
+    else:
       fleeingScore = -10
-
+  
   # maxDistanceFromGhost = util.manhattanDistance(farthestGhost(ghosts, position).getPosition(), position)
   capsuleScore = 0
   capsulesNumber = len(capsules)
   if (capsulesNumber > 0 and not ghostScared):
     nearestCapsule = nearestFoodGansterDjikstra(position, walls, capsulessGrid)
     nearestFoodToPacman = nearestCapsule
-  else :
+  else:
     capsuleScore = 15
-
+  
   maybeTrapped = 0
   if len(currGameState.getLegalActions(0)) == 2:
     maybeTrapped = -10
-
+  
   if len(scaredGhosts) > 0:
     nearestFoodToPacman = distanceNearestGhost
     # nearestFoodToPacman = util.manhattanDistance(nearestGhost(scaredGhosts, position).getPosition(), position) / 10
+  
+  return currGameState.getScore() + \
+         (float(1) / (nearestFoodToPacman) * 5) + \
+         fleeingScore + \
+         scoreGhostAfraid + \
+         capsuleScore + \
+         maybeTrapped + \
+         scoreBadPos
 
-  return  currGameState.getScore() +\
-          (float(1)/(nearestFoodToPacman) * 5) +\
-          fleeingScore +\
-          scoreGhostAfraid +\
-          capsuleScore +\
-          maybeTrapped +\
-          scoreBadPos
 
 def nearestGhost(ghosts, position, walls, ghostsGrid):
   for ghostRow in ghostsGrid:
@@ -673,7 +669,6 @@ def extractFeature(gameState, actionChoosed):
   nearestCapsule = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, capsulesGrid) if (len(capsules) > 0) else 0
   nextAction = getActionsNumber(actionChoosed)
   #produit scalaire du rapport de la direction de pacman avec le fantome pour savoir si il vont se catapulter
-  lastAction = getActionsNumber(BadAction(HistoActions))
 
   # nextActionUp = "North" == nextAction
   # nextActionDown = "South" == nextAction
