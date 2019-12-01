@@ -6,22 +6,30 @@ from joblib import dump, load
 from sklearn import tree
 from sklearn.model_selection import GridSearchCV
 
-data = pd.read_csv("ReflexMatrix.csv")
+data = pd.read_csv("DistanceGlued.csv")
 y = data["labelNextAction"]
 X = data.drop(columns=["labelNextAction"], axis=1)
-xtrain, xtest, ytrain, ytest = train_test_split(X, y, train_size=0.8)
+xtrain, xtest, ytrain, ytest = train_test_split(X, y, train_size=0.9)
+# # #
+parameters = {'criterion':['gini','entropy'],'max_depth':[50, 70, 100, 120, 150]}
+gs = GridSearchCV(tree.DecisionTreeClassifier(), parameters, cv=3)
 
-
-
-
-
-parameters = {'criterion':['gini','entropy'],'max_depth':[0.1, 1, 10, 100, 1000, 10000]}
-gs = GridSearchCV(tree.DecisionTreeClassifier(), parameters, cv=5)
-
-gs = gs.fit(xtrain, ytrain)
-print gs.best_params_
-print gs.best_score_
-clf = tree.DecisionTreeClassifier(criterion="gini", max_depth=10)
+# gs = gs.fit(xtrain, ytrain)
+# print gs.best_params_
+# print gs.best_score_
+# dump(gs, 'TrainedModels/gsPlus.joblib', protocol=2)
+#
+clf = tree.DecisionTreeClassifier(criterion="gini", max_depth=70)
 
 clf = clf.fit(xtrain, ytrain)
-dump(clf, 'TrainedModels/clfMatrix.joblib', protocol=2)
+dump(clf, 'TrainedModels/clfMatrixPlus.joblib', protocol=2)
+
+# #
+# clf = load('TrainedModels/clfMatrixPlus.joblib')
+# data = pd.read_csv("DistanceGlued.csv")
+# y = data["labelNextAction"]
+# X = data.drop(columns=["labelNextAction"], axis=1)
+
+# print clf.score(X,y)
+
+# xtrain, xtest, ytrain, ytest = train_test_split(X, y, train_size=0.5)
