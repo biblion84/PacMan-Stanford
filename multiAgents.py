@@ -19,8 +19,7 @@ from joblib import load
 dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
                "nearestFood", "nearestGhost", "nearestCapsule", "nearestGhostAfraid", "lastAction", "labelNextAction"]
 
-dataColumnsDistanceOnly =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
-                            "foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
+dataColumnsDistanceOnly =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
                             "wallUp","wallDown","wallLeft","wallRight","lastAction", "labelNextAction"]
 def scoreEvaluationFunction(currentGameState):
   return currentGameState.getScore()
@@ -168,6 +167,8 @@ def getActionsNumber(action):
     return 2
   if action == "East":
     return 3
+  if action == "Stop":
+    return 4
   return 0
 
 def getActionByNumber(number):
@@ -179,6 +180,8 @@ def getActionByNumber(number):
     return"West"
   if number == 3:
     return"East"
+  if number == 4:
+    return "Stop"
 
 def extractFeature(gameState, actionChoosed):
   # ce que y'a dans case haut,bas,gauche,droite
@@ -265,7 +268,7 @@ def extractFeature(gameState, actionChoosed):
 
 def distanceWithAction(gs, action):
   if action not in gs.getLegalActions(0):
-    return   [-1,-1]
+    return   [-100,-100]
   gameState = gs.generatePacmanSuccessor(action)
   pacmanPosition = gameState.getPacmanPosition()
   ghosts = gameState.getGhostStates()
@@ -285,20 +288,35 @@ def distanceWithAction(gs, action):
     x = int(ghostPosition[0])
     y = int(ghostPosition[1])
     ghostsGrid[x][y] = True
-  nearestFood = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0 else 0
+  nearestFood = nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0 else 0
   nGhost = nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
-  nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
+  # nearestGhostDistance = nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
+  nearestGhostDistance = util.manhattanDistance(nGhost)
 
   return   [nearestFood, nearestGhostDistance]
 
 def extractFeatureDistanceOnly(gameState, actionChoosed):
+  ghosts = gameState.getGhostStates()
+  foods = gameState.getFood()
+  ghostsGrid = foods.copy()
+
   pacmanPosition = gameState.getPacmanPosition()
   walls = gameState.getWalls()
 
-  wallUp = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] + 1])
-  wallDown = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] - 1])
-  wallLeft = inGrid(walls, [pacmanPosition[0] - 1, pacmanPosition[1]])
-  wallRight = inGrid(walls, [pacmanPosition[0] + 1, pacmanPosition[1]])
+  for ghostRow in ghostsGrid:
+    for ghostCol in range(0, len(ghostRow) - 1):
+      ghostRow[ghostCol] = False
+
+  for ghost in ghosts:
+    ghostPosition = ghost.getPosition()
+    x = int(ghostPosition[0])
+    y = int(ghostPosition[1])
+    ghostsGrid[x][y] = True
+    
+  wallUp = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] + 1]) or inGrid(ghostsGrid, [pacmanPosition[0], pacmanPosition[1] + 1])
+  wallDown = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] - 1]) or inGrid(ghostsGrid, [pacmanPosition[0], pacmanPosition[1] - 1])
+  wallLeft = inGrid(walls, [pacmanPosition[0] - 1, pacmanPosition[1]]) or inGrid(ghostsGrid, [pacmanPosition[0] - 1, pacmanPosition[1]])
+  wallRight = inGrid(walls, [pacmanPosition[0] + 1, pacmanPosition[1]]) or inGrid(ghostsGrid, [pacmanPosition[0] + 1, pacmanPosition[1]])
 
   nextAction = getActionsNumber(actionChoosed)
   # produit scalaire du rapport de la direction de pacman avec le fantome pour savoir si il vont se catapulter
@@ -308,7 +326,7 @@ def extractFeatureDistanceOnly(gameState, actionChoosed):
   distancesLeft = distanceWithAction(gameState, "West")
   distancesRight = distanceWithAction(gameState, "East")
 
-  dataFrameCurrentState =   getSurroundingMatrix(gameState) + [
+  dataFrameCurrentState =  getSurroundingMatrix(gameState) + [
                             distancesUp[0],
                             distancesDown[0],
                             distancesLeft[0],
@@ -655,7 +673,7 @@ class ReflexAgent(Agent):
       ghostsGrid[x][y] = True
       
     legalMoves = gameState.getLegalActions()
-    legalMoves.remove(Directions.STOP)
+    # legalMoves.remove(Directions.STOP)
     # Choose one of the best actions
     scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
     bestScore = max(scores)
@@ -670,11 +688,13 @@ class ReflexAgent(Agent):
     AlreadyVisited.append(nextGameState.getPacmanPosition())
     # if self.evaluationFunction(gameState, bestAction) > gameState.getScore() or   nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid) == 1:
       # self.dataFrameMatrix.loc[self.indexDataframe, :] =  matrixDataframe
-    self.dataFrameDistance.loc[self.indexDataframe, :] = extractFeatureDistanceOnly(gameState, bestAction)
-    lastAction[0] = getActionsNumber(bestAction)
-    self.indexDataframe = self.indexDataframe + 1
-    if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 950):
+    if (not nextGameState.isLose()):
+      self.dataFrameDistance.loc[self.indexDataframe, :] = extractFeatureDistanceOnly(gameState, bestAction)
+      lastAction[0] = getActionsNumber(bestAction)
+      self.indexDataframe = self.indexDataframe + 1
+    
+    if (nextGameState.isWin() or nextGameState.isLose()):
+      if True:
         with open(self.filesave, 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
       
