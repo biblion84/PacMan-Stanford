@@ -14,7 +14,7 @@ from multiAgents import MultiAgentSearchAgent, extractFeature, getActionByNumber
 
 class SVMAgent(MultiAgentSearchAgent):
   def __init__(self):
-    self.dataTrain = pd.read_csv("dataGameWonMoreThan1500WithColumnNames.csv")
+    self.dataTrain = pd.read_csv("DistanceReflexMatrixbatch6.csv")
     self.dataTarget = self.dataTrain["labelNextAction"]
     self.dataTrain = self.dataTrain.drop(columns=["labelNextAction"], axis=1)
     xtrain, xtest, ytrain, ytest = train_test_split(self.dataTrain, self.dataTarget, train_size=0.8)
