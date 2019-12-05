@@ -19,8 +19,8 @@ from joblib import load
 dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
                "nearestFood", "nearestGhost", "nearestCapsule", "nearestGhostAfraid", "lastAction", "labelNextAction"]
 
-dataColumnsDistanceOnly =  ["foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
-                            "wallUp","wallDown","wallLeft","wallRight","lastAction", "labelNextAction"]
+dataColumnsDistanceOnly =  ["numberOfPossibleMove","foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
+                            "wallUp","wallDown","wallLeft","wallRight", "labelNextAction"]
 def scoreEvaluationFunction(currentGameState):
   return currentGameState.getScore()
 
@@ -31,6 +31,8 @@ class MultiAgentSearchAgent(Agent):
     self.depth = int(depth)
     self.indexDataframe = 0
     self.alreadyWroteHeaders = False
+    self.filesave = filesave
+    self.dataFrameDistance = pd.DataFrame(columns=dataColumnsDistanceOnly)
     self.filesave = filesave
     self.dataFrame = pd.DataFrame(columns=dataColumns)
 
@@ -67,7 +69,7 @@ def farthestGhost(ghosts, position):
   return nGhost
 
 def nearestGhostDumb(ghosts, position):
-  distance = float('-inf')
+  distance = float('inf')
   nGhost = ghosts[0]
   for ghost in ghosts:
     newDistance = util.manhattanDistance(position, ghost.getPosition())
@@ -278,7 +280,7 @@ def extractFeature(gameState, actionChoosed):
 
 def distanceWithAction(gs, action):
   if action not in gs.getLegalActions(0):
-    return   [-100,-100]
+    return   [0,0]
   gameState = gs.generatePacmanSuccessor(action)
   pacmanPosition = gameState.getPacmanPosition()
   ghosts = gameState.getGhostStates()
@@ -298,11 +300,11 @@ def distanceWithAction(gs, action):
     x = int(ghostPosition[0])
     y = int(ghostPosition[1])
     ghostsGrid[x][y] = True
-  nearestFood = nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0 else 0
+  nearestFood = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0 else 0
   nGhost = nearestGhostDumb(ghosts, pacmanPosition)
-  # nearestGhostDistance = nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
+  #nearestGhostDistance = float(1) / nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
   nearestGhostDistance = util.manhattanDistance(nGhost.getPosition(), pacmanPosition)
-
+  
   return   [nearestFood, nearestGhostDistance]
 
 def extractFeatureDistanceOnly(gameState, actionChoosed):
@@ -323,10 +325,11 @@ def extractFeatureDistanceOnly(gameState, actionChoosed):
     y = int(ghostPosition[1])
     ghostsGrid[x][y] = True
     
-  wallUp = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] + 1]) or inGrid(ghostsGrid, [pacmanPosition[0], pacmanPosition[1] + 1])
-  wallDown = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] - 1]) or inGrid(ghostsGrid, [pacmanPosition[0], pacmanPosition[1] - 1])
-  wallLeft = inGrid(walls, [pacmanPosition[0] - 1, pacmanPosition[1]]) or inGrid(ghostsGrid, [pacmanPosition[0] - 1, pacmanPosition[1]])
-  wallRight = inGrid(walls, [pacmanPosition[0] + 1, pacmanPosition[1]]) or inGrid(ghostsGrid, [pacmanPosition[0] + 1, pacmanPosition[1]])
+  
+  wallUp = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] + 1])
+  wallDown = inGrid(walls, [pacmanPosition[0], pacmanPosition[1] - 1])
+  wallLeft = inGrid(walls, [pacmanPosition[0] - 1, pacmanPosition[1]])
+  wallRight = inGrid(walls, [pacmanPosition[0] + 1, pacmanPosition[1]])
 
   nextAction = getActionsNumber(actionChoosed)
   # produit scalaire du rapport de la direction de pacman avec le fantome pour savoir si il vont se catapulter
@@ -337,6 +340,7 @@ def extractFeatureDistanceOnly(gameState, actionChoosed):
   distancesRight = distanceWithAction(gameState, "East")
 
   dataFrameCurrentState =  [
+                            len(gameState.getLegalActions(0)),
                             distancesUp[0],
                             distancesDown[0],
                             distancesLeft[0],
@@ -349,7 +353,6 @@ def extractFeatureDistanceOnly(gameState, actionChoosed):
                             wallDown,
                             wallLeft,
                             wallRight,
-                            lastAction[0],
                             nextAction]
   return dataFrameCurrentState
 #TODO Nombre de bouffe totale en haut, gauche, droite
@@ -635,20 +638,20 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     oldSore = currGameState.getScore()
     newScore = currGameState.generateSuccessor(0, bestAction).getScore()
     if (newScore > oldSore):
-        features = extractFeature(currGameState, bestAction)
-        self.dataFrame.loc[self.indexDataframe, :] = features
+        features = extractFeatureDistanceOnly(currGameState, bestAction)
+        self.dataFrameDistance.loc[self.indexDataframe, :] = features
         lastAction[0] = getActionsNumber(bestAction)
         self.indexDataframe = self.indexDataframe + 1
     
     if (nextGameState.isWin()):
-      if (nextGameState.getScore() > 1500):
-        with open('dataGameWonMoreThan1500WithColumnNames.csv', 'a') as f:
+      if True:
+        with open(self.filesave, 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
-          
+    
           if (self.alreadyWroteHeaders):
-            self.dataFrame.to_csv(f, header=False, index=False)
+            self.dataFrameDistance.to_csv(f, header=False, index=False)
           else:
-            self.dataFrame.to_csv(f, header=True, index=False)
+            self.dataFrameDistance.to_csv(f, header=True, index=False)
             self.alreadyWroteHeaders = True
     return bestAction
 
@@ -703,7 +706,7 @@ class ReflexAgent(Agent):
       lastAction[0] = getActionsNumber(bestAction)
       self.indexDataframe = self.indexDataframe + 1
     
-    if (nextGameState.isWin() or nextGameState.isLose()):
+    if (nextGameState.isWin()):
       if True:
         with open(self.filesave, 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
@@ -810,6 +813,7 @@ def getSurroundingMatrix(gameState):
 class Matrix(MultiAgentSearchAgent):
   def __init__(self):
     self.agent = load('TrainedModels/clfMatrixPlus.joblib')
+    self.agentWithoutGhosts = load('TrainedModels/clfMatrixPlusWithout.joblib')
     lastAction[0] = 1
 
   def getAction(self, currGameState):
@@ -817,7 +821,13 @@ class Matrix(MultiAgentSearchAgent):
       columns=dataColumnsDistanceOnly)
     data.loc[0, :] = extractFeatureDistanceOnly(currGameState, lastAction[0])
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
-    nextActionNumber = self.agent.predict(dataTrain)
+    ghosts = currGameState.getGhostStates()
+    pacmanPosition = currGameState.getPacmanPosition()
+
+    if nearestGhostDumb(ghosts, pacmanPosition) > 6:
+      nextActionNumber = self.agentWithoutGhosts.predict(dataTrain)
+    else :
+      nextActionNumber = self.agent.predict(dataTrain)
     nextPredictedAction = getActionByNumber(nextActionNumber)
     lastAction[0] = nextActionNumber
 
