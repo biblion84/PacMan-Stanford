@@ -19,7 +19,7 @@ from joblib import load
 dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
                "nearestFood", "nearestGhost", "nearestCapsule", "nearestGhostAfraid", "lastAction", "labelNextAction"]
 
-dataColumnsDistanceOnly =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
+dataColumnsDistanceOnly =  ["foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
                             "wallUp","wallDown","wallLeft","wallRight","lastAction", "labelNextAction"]
 def scoreEvaluationFunction(currentGameState):
   return currentGameState.getScore()
@@ -62,6 +62,16 @@ def farthestGhost(ghosts, position):
   for ghost in ghosts:
     newDistance = util.manhattanDistance(position, ghost.getPosition())
     if newDistance > distance:
+      distance = newDistance
+      nGhost = ghost
+  return nGhost
+
+def nearestGhostDumb(ghosts, position):
+  distance = float('-inf')
+  nGhost = ghosts[0]
+  for ghost in ghosts:
+    newDistance = util.manhattanDistance(position, ghost.getPosition())
+    if newDistance < distance:
       distance = newDistance
       nGhost = ghost
   return nGhost
@@ -289,9 +299,9 @@ def distanceWithAction(gs, action):
     y = int(ghostPosition[1])
     ghostsGrid[x][y] = True
   nearestFood = nearestFoodGansterDjikstra(pacmanPosition, walls, foods) if foodNumber > 0 else 0
-  nGhost = nearestGhost(ghosts, pacmanPosition, walls, ghostsGrid)
+  nGhost = nearestGhostDumb(ghosts, pacmanPosition)
   # nearestGhostDistance = nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid)
-  nearestGhostDistance = util.manhattanDistance(nGhost)
+  nearestGhostDistance = util.manhattanDistance(nGhost.getPosition(), pacmanPosition)
 
   return   [nearestFood, nearestGhostDistance]
 
@@ -326,7 +336,7 @@ def extractFeatureDistanceOnly(gameState, actionChoosed):
   distancesLeft = distanceWithAction(gameState, "West")
   distancesRight = distanceWithAction(gameState, "East")
 
-  dataFrameCurrentState =  getSurroundingMatrix(gameState) + [
+  dataFrameCurrentState =  [
                             distancesUp[0],
                             distancesDown[0],
                             distancesLeft[0],
