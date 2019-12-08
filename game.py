@@ -26,6 +26,8 @@ dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"
                "nearestFood", "nearestGhost", "nearestCapsule", "nearestGhostAfraid", "lastAction", "labelNextAction"]
 
 
+dataColumnsVotes =  ["voteFoodUp","voteFoodDown","voteFoodLeft","voteFoodRight", "voteGhostUp","voteGhostDown","voteGhosLeft","voteGhostRight", "labelNextAction"]
+
 dataColumnsDistanceOnly =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
                             "foodUp","foodDown","foodLeft","foodRight","ghostUp","ghostDown","ghostLeft","ghostRight",
                             "wallUp","wallDown","wallLeft","wallRight","lastAction", "labelNextAction"]
@@ -46,6 +48,7 @@ class Agent:
     self.dataFrame = pd.DataFrame(columns=dataColumns)
     self.dataFrameMatrix = pd.DataFrame(columns=dataColumnsMatrix)
     self.dataFrameDistance = pd.DataFrame(columns=dataColumnsDistanceOnly)
+    self.dataFrameVotes = pd.DataFrame(columns=dataColumnsVotes)
     self.filesave = filesave
     
   def getAction(self, state):

@@ -17,11 +17,11 @@ datas = []
 
 
 for i in range(0,7):
-    data = pd.read_csv("DistanceReflexMatrixbatch" + str(i) + ".csv")
+    data = pd.read_csv("VoteBatch" + str(i) + ".csv")
     datas.append(data)
 
 glued = pd.concat(datas)
 
-with open("DistanceGlued2.csv", 'a') as f:
+with open("VoteGlued.csv", 'a') as f:
     # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
     glued.to_csv(f, header=True, index=False)

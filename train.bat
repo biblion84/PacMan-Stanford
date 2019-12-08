@@ -1,7 +1,1 @@
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch0.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch1.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch2.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch3.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch4.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch5.csv"
-start "" pypy pacman.py -l smallClassic -p ReflexAgent -q -n 1000 -a filesave="DistanceReflexMatrixbatch6.csv"
+start "" pypy pacman.py -l smallClassic -p VoteAgent -q -n 100 -a filesave="VotesBatch0.csv"

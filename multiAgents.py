@@ -9,11 +9,12 @@
 from util import manhattanDistance, Queue
 from game import Directions, Actions
 import random, util
-from game import Agent
+from game import Agent, dataColumnsVotes
 from MonteCarlo import MCTS, Node
 import pandas as pd
 import numpy as np
 from joblib import load
+from collections import namedtuple
 
 
 dataColumns =  ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23",
@@ -67,6 +68,59 @@ def farthestGhost(ghosts, position):
       nGhost = ghost
   return nGhost
 
+DjikstraTuple = namedtuple("DjikstraTuple", ["currentPosition", "originalPosition"])
+
+
+def voteDjikstraGangster(pacmanPosition, walls, foods, totalFood, voteFunction):
+    depth = 1
+    positionTested = []
+    positionTested.append(pacmanPosition)
+    possiblePositions = Actions.getLegalNeighbors(pacmanPosition, walls)
+    votes = dict()
+    foodFound = 0
+    for positionAlreadyTested in positionTested:
+      if (positionAlreadyTested in possiblePositions):
+        possiblePositions.remove(positionAlreadyTested)
+
+    positionQueueA = Queue()
+    positionQueueB = Queue()
+    for position in possiblePositions:
+      votes[position] = float(0)
+      positionQueueA.push(DjikstraTuple(position, position))
+
+    positionQueue = positionQueueA
+    QueueA = True
+
+    while True:
+      if positionQueue.isEmpty():
+        return votes
+      DjikstraPosition = positionQueue.pop()
+      positionToTest = DjikstraPosition.currentPosition
+      if (positionQueue.isEmpty()):
+        depth += 1
+        if (QueueA):
+          QueueA = False
+          positionQueue = positionQueueB
+        else:
+          QueueA = True
+          positionQueue = positionQueueA
+      positionTested.append(positionToTest)
+      if foods[positionToTest[0]][positionToTest[1]]:
+        votes[DjikstraPosition.originalPosition] +=  round(voteFunction(depth), 8)
+        foodFound += 1
+        if foodFound == totalFood or depth == 200:
+          return votes
+      possiblePositions = Actions.getLegalNeighbors(positionToTest, walls)
+      possiblePositions.remove(positionToTest)
+      for position in possiblePositions:
+        if not (position in positionTested):
+          if (QueueA):
+            positionQueueB.push(DjikstraTuple(position, DjikstraPosition.originalPosition))
+          else:
+            positionQueueA.push(DjikstraTuple(position, DjikstraPosition.originalPosition))
+
+    return votes
+
 def nearestFoodGansterDjikstra(pacmanPosition, walls, foods):
     depth = 1
     positionTested = []
@@ -80,7 +134,7 @@ def nearestFoodGansterDjikstra(pacmanPosition, walls, foods):
     positionQueueA = Queue()
     positionQueueB = Queue()
     for position in possiblePositions:
-        positionQueueA.push(position)
+        positionQueueA.push([position, position])
 
     found = False
 
@@ -630,10 +684,123 @@ def getMatrixDataframe(matrix, actionTaken):
   matrix.append(getActionsNumber(actionTaken))
   return  matrix
 
+def getGhostGrid(ghosts, foods):
+  ghostsGrid = foods.copy()
+  for ghostRow in ghostsGrid:
+    for ghostCol in range(0, len(ghostRow) - 1):
+      ghostRow[ghostCol] = False
+
+  for ghost in ghosts:
+    ghostPosition = ghost.getPosition()
+    x = int(ghostPosition[0])
+    y = int(ghostPosition[1])
+    ghostsGrid[x][y] = True
+  return ghostsGrid
+
+def getMoveFromPosition(originalPosition, destinationPosition):
+    if (destinationPosition[0] > originalPosition[0]):
+      return "East"
+    if (destinationPosition[0] < originalPosition[0]):
+      return "West"
+    if (destinationPosition[1] > originalPosition[1]):
+      return "North"
+    if (destinationPosition[1] < originalPosition[1]):
+      return "South"
+
+
+def keywithmaxval(d):
+  """ a) create a list of the dict's keys and values;
+      b) return the key with the max value"""
+  v = list(d.values())
+  k = list(d.keys())
+  return k[v.index(max(v))]
+
+def voteFunctionGhost(distance):
+  return -10 * float(1) / (distance * distance * distance)
+
+def voteFunctionFood(distance):
+  return 1 * float(1) / (distance * distance)
+
+PossibleActions = ["North", "South", "West", "East"]
+
+def fillUpVotesColumns(votesFood, votesGhosts, pacmanPosition, nextAction):
+  votesFoodText = dict()
+  votesFoodGhostText = dict()
+
+  for position in votesFood:
+    votesFoodText[getMoveFromPosition(pacmanPosition, position)] = votesFood[position]
+    votesFoodGhostText[getMoveFromPosition(pacmanPosition, position)] = votesGhosts[position]
+
+  for possibleAction in PossibleActions:
+    if possibleAction not in votesFoodText:
+      votesFoodText[possibleAction] = 0
+      votesFoodGhostText[possibleAction] = 0
+
+  return [
+    votesFoodText["North"],
+    votesFoodText["South"],
+    votesFoodText["West"],
+    votesFoodText["East"],
+    votesFoodGhostText["North"],
+    votesFoodGhostText["South"],
+    votesFoodGhostText["West"],
+    votesFoodGhostText["East"],
+    nextAction
+  ]
+
+def getVotes(gameState):
+  pacmanPosition = gameState.getPacmanPosition()
+  ghosts = gameState.getGhostStates()
+  walls = gameState.getWalls()
+  foods = gameState.getFood()
+  foodNumber = gameState.getNumFood()
+  ghostsGrid = getGhostGrid(ghosts, foods)
+  votes = dict()
+  votesFood = voteDjikstraGangster(pacmanPosition, walls, foods, foodNumber, voteFunctionFood)
+  votesGhosts = voteDjikstraGangster(pacmanPosition, walls, ghostsGrid, len(ghosts), voteFunctionGhost)
+
+  possiblePositions = Actions.getLegalNeighbors(pacmanPosition, walls)
+
+  if (len(gameState.getLegalPacmanActions()) == 1):
+    return gameState.getLegalPacmanActions()[0]
+
+  possiblePositions.remove(pacmanPosition)
+
+  for position in possiblePositions:
+    votes[position] = 0
+
+  for position in possiblePositions:
+    if position in votesFood:
+      votes[position] += votesFood[position]
+    if position in votesGhosts:
+      votes[position] += votesGhosts[position]
+    if (Actions.getLegalNeighbors(position, walls) == 1):
+      votes[position] -= 2
+    votes[position] -= AlreadyVisitedScore(position)
+  preferedPosition = keywithmaxval(votes)
+  AlreadyVisited.append(preferedPosition)
+  nextMove = getMoveFromPosition(pacmanPosition, preferedPosition)
+  return fillUpVotesColumns(votesFood, votesGhosts, pacmanPosition, nextMove)
+
+class VoteAgent(Agent):
+
+  def getAction(self, gameState):
+    votesColumn = getVotes(gameState)
+    self.dataFrameVotes.loc[self.indexDataframe, :] = votesColumn
+    self.indexDataframe += 1
+
+    nextGameState = gameState.generatePacmanSuccessor(votesColumn[-1])
+    if (nextGameState.isWin()):
+        with open(self.filesave, 'a') as f:
+          if (self.alreadyWroteHeaders):
+            self.dataFrameVotes.to_csv(f, header=False, index=False)
+          else:
+            self.dataFrameVotes.to_csv(f, header=True, index=False)
+            self.alreadyWroteHeaders = True
+    return votesColumn[-1]
 
 class ReflexAgent(Agent):
-  
-  
+
   def getAction(self, gameState):
     pacmanPosition = gameState.getPacmanPosition()
     ghosts = gameState.getGhostStates()
@@ -643,24 +810,24 @@ class ReflexAgent(Agent):
     capsules = gameState.getCapsules()
     ghostsGrid = foods.copy()
     capsulesGrid = foods.copy()
-  
+
     for ghostRow in ghostsGrid:
       for ghostCol in range(0, len(ghostRow) - 1):
         ghostRow[ghostCol] = False
-  
+
     for ghost in ghosts:
       ghostPosition = ghost.getPosition()
       x = int(ghostPosition[0])
       y = int(ghostPosition[1])
       ghostsGrid[x][y] = True
-      
+
     legalMoves = gameState.getLegalActions()
     legalMoves.remove(Directions.STOP)
     # Choose one of the best actions
     scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
     bestScore = max(scores)
     bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-    chosenIndex = random.choice(bestIndices) # Pick randomly among the best
+    chosenIndex = random.choice(bestIndices)  # Pick randomly among the best
     bestAction = legalMoves[chosenIndex]
     if bestAction == None:
       bestAction = legalMoves[0]
@@ -669,7 +836,7 @@ class ReflexAgent(Agent):
     nextGameState = gameState.generatePacmanSuccessor(bestAction)
     AlreadyVisited.append(nextGameState.getPacmanPosition())
     # if self.evaluationFunction(gameState, bestAction) > gameState.getScore() or   nearestFoodGansterDjikstra(pacmanPosition, walls, ghostsGrid) == 1:
-      # self.dataFrameMatrix.loc[self.indexDataframe, :] =  matrixDataframe
+    # self.dataFrameMatrix.loc[self.indexDataframe, :] =  matrixDataframe
     self.dataFrameDistance.loc[self.indexDataframe, :] = extractFeatureDistanceOnly(gameState, bestAction)
     lastAction[0] = getActionsNumber(bestAction)
     self.indexDataframe = self.indexDataframe + 1
@@ -677,7 +844,7 @@ class ReflexAgent(Agent):
       if (nextGameState.getScore() > 950):
         with open(self.filesave, 'a') as f:
           # self.dataFrame.columns = ["ghostUp","ghostDown","ghostLeft","ghostRight","wallUp","wallDown","wallLeft","wallRight","foodUp","foodDown","foodLeft","foodRight","emptyUp","emptyDown","emptyLeft","emptyRight","nearestFood","nearestGhost","nearestCapsule","legalPositionUp","legalPositionDown","legalPositionULeft","legalPositionRight","pacmanPositionX","pacmanPositionY","labelNextAction"]
-      
+
           if (self.alreadyWroteHeaders):
             self.dataFrameDistance.to_csv(f, header=False, index=False)
           else:
@@ -714,9 +881,8 @@ class ReflexAgent(Agent):
       #   score += 200
       # Si on est proche et qu'ils sont pas mangeable c'est moins top d'un coups
       if distanceFromGhost <= 1:
-            score -= 40
-    return  betterEvaluationFunctionReflex(currGameState.generatePacmanSuccessor(pacManAction)) +  score
-
+        score -= 40
+    return betterEvaluationFunctionReflex(currGameState.generatePacmanSuccessor(pacManAction)) + score
 
 
 def outOfMapX(x, layout):
@@ -784,10 +950,11 @@ class Matrix(MultiAgentSearchAgent):
 
   def getAction(self, currGameState):
     data = pd.DataFrame(
-      columns=dataColumnsDistanceOnly)
-    data.loc[0, :] = extractFeatureDistanceOnly(currGameState, lastAction[0])
+      columns=dataColumnsVotes)
+    data.loc[0, :] = getVotes(currGameState)
     dataTrain = data.drop(columns=["labelNextAction"], axis=1)
-    nextActionNumber = self.agent.predict(dataTrain)
+    nextActionNumber = getActionsNumber(self.agent.predict(dataTrain))
+    #Oui je sais
     nextPredictedAction = getActionByNumber(nextActionNumber)
     lastAction[0] = nextActionNumber
 
